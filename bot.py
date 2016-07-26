@@ -105,7 +105,7 @@ def show_user(message, match):
         bot.reply_to(message, str(res))
 
 
-@bot.message_handler(commands=['show','whois','s'])
+@bot.message_handler(commands=['show','whois'])
 def show(message):
     try:
         match=message.text.split(' ')[1]
@@ -233,6 +233,23 @@ def pianswer(message):
         cur.execute("INSERT INTO pitypes VALUES ({}, '{}', '{}', '{}', '{}')".format(str(user.id), user.first_name, user.last_name, user.username, message.text))
 
     bot.reply_to(message, text, reply_markup=keyboard_hider)
+
+
+@bot.message_handler(content_types=['sticker'])
+def stick(message):
+    print(message.sticker)
+
+@bot.message_handler(regexp='!.*')
+def mystick(message):
+    stickers={
+            '!попкорн': 'BQADAgADvA8AAp7OCwABDNdhX3eVtr4C',
+            '!ойвсё': 'BQADAgADtCMAAlOx9wNFyM-lafn4dQI',
+            '!плак': 'BQADAgADWwAD49KZAsojCYhAOXP-Ag',
+            }
+    stickername=message.text
+    if(stickername in stickers):
+        bot.send_sticker(message.chat.id, stickers[stickername])
+
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
