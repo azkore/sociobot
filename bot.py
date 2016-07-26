@@ -5,8 +5,8 @@ from telebot import *
 import sqlite3 as sql
 
 bot = telebot.TeleBot(config.token)
-#storefile='sooctypes.txt'
-    #cur.execute("CREATE TABLE soctypes(User INT uniq, firstname text, lastname text, nick text, Type TEXT)")
+db = config.db
+#cur.execute("CREATE TABLE soctypes(User INT uniq, firstname text, lastname text, nick text, Type TEXT)")
 soctypes=('дон','дюма', 'гюго', 'роб', 'гам', 'макс', 'жук', 'еся', 'нап','баль', 'джек', 'драй', 'штир', 'дост', 'гек', 'габ')
 pitypes=('ЭЛВФ', 'ЭЛФВ', 'ЭВЛФ', 'ЭВФЛ', 'ЭФВЛ', 'ЭФЛВ', 'ЛЭФВ', 'ЛВФЭ', 'ЛВЭФ', 'ЛЭВФ', 'ЛФЭВ', 'ЛФВЭ', 'ВЛЭФ', 'ВЛФЭ', 'ВФЛЭ', 'ВФЭЛ', 'ВЭЛФ', 'ВЭФЛ', 'ФЭЛВ', 'ФЭВЛ', 'ФЛЭВ', 'ФЛВЭ', 'ФВЭЛ', 'ФВЛЭ')
 allowed_chats=(-146621358, -1001053711520)
