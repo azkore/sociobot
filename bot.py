@@ -32,7 +32,7 @@ def verify_chat(message):
 #def repeat_all_messages(message): # Название функции не играет никакой роли, в принципе
 #    bot.send_message(message.chat.id, message.text)
 def get_soctype(soctype):
-    con = sql.connect('test.db')
+    con = sql.connect(db)
     with con:
         cur = con.cursor()
         print("select firstname, lastname, nick  from soctypes where type='{}'".format(soctype));
@@ -73,7 +73,7 @@ def show_user(message, match):
     #    match=message.text.split(' ')[1]
     #except IndexError:
     #    match=''
-    con = sql.connect('test.db')
+    con = sql.connect(db)
     with con:
         cur = con.cursor()
         match=match.replace('@','')
@@ -206,7 +206,7 @@ def answer(message):
         #    store[message.text].add(str(message.from_user.id))
         #except KeyError:
         #    store[message.text]=[str(message.from_user.id)]
-    con = sql.connect('test.db')
+    con = sql.connect(db)
     with con:
         cur = con.cursor()
         user=message.from_user
@@ -224,7 +224,7 @@ def pianswer(message):
     keyboard_hider = types.ReplyKeyboardHide(selective=True)
     text='ok'
 
-    con = sql.connect('test.db')
+    con = sql.connect(db)
     with con:
         cur = con.cursor()
         user=message.from_user
