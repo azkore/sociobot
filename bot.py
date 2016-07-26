@@ -196,7 +196,10 @@ def answer(message):
     if(message.text.startswith('гек') and message.from_user.username=='BlaBla7'):
          text='Опасайся злобной блуд! А. ты ж и есть злобная блуд...'
     if(message.from_user.first_name=='gr'):
-         text='Ну мы-то знаем...'
+        if(message.text.startswith('еся')):
+            text='Правду говорить легко и приятно!'
+        else:
+            text='Ну мы-то знаем...'
     #with shelve.open(storefile) as store:
         #store[str(message.from_user.id)]=message.text
         #try:
