@@ -57,11 +57,11 @@ def show_types(message, soctype):
     if soctype:
         members=get_soctype(soctype)
         print(str(members))
-        res='('+str(len(members))+') '+ plist(members)
+        res='(<b>'+str(len(members))+'</b>) '+ plist(members)
     else:
        for type in soctypes:
            members=get_soctype(type)
-           res=res + type + '(' + str(len(members)) + '): ' + plist(members) + '\n'
+           res=res + type + '(<b>' + str(len(members)) + '</b>): ' + plist(members) + '\n'
            total=total+len(members)
        res=res+'Всего: <b>{}</b>'.format(str(total)) 
     bot.reply_to(message, str(res),parse_mode='HTML')
@@ -177,13 +177,13 @@ def default_test(message):
         bot.reply_to(message, "Кто ты, " + message.from_user.first_name + '?', reply_markup=markup)
 
 def is_soctype(arg):
-    if(arg.text[1:] in soctypes):
+    if(arg.text and (arg.text[1:] in soctypes)):
         return True
     #else:
     #    print(arg)
 
 def is_pitype(arg):
-    if(arg.text[1:] in pitypes):
+    if(arg.text and (arg.text[1:] in pitypes)):
         return True
 
 @bot.message_handler(func=is_soctype)
