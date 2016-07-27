@@ -102,6 +102,9 @@ def show_user(message, match):
             res=res+" {}".format(row[0])
         print("res" + str(res))
 
+        if(not res):
+            res="no info"
+
         bot.reply_to(message, str(res))
 
 
@@ -111,7 +114,7 @@ def show(message):
         match=message.text.split(' ')[1]
     except IndexError:
         match=''
-    if(not match or match in soctypes):
+    if((not match) or (match in soctypes)):
         show_types(message, match)
     else:
         show_user(message, match) 
@@ -124,7 +127,8 @@ def pitest(message):
         arg=''
 
     markup = types.ReplyKeyboardMarkup(row_width=6, one_time_keyboard=False, selective=True)
-    markup.add(*pitypes)
+    p=map(lambda x: '>'+str(x), pitypes)
+    markup.add(*p)
 
     if((arg=="all") and (message.from_user.username=='azcore')):
         markup = types.ReplyKeyboardMarkup(row_width=6, one_time_keyboard=False, selective=False)
@@ -159,7 +163,8 @@ def default_test(message):
 # row_width is used in combination with the add() function.
 # It defines how many buttons are fit on each row before continuing on the next row.
     markup = types.ReplyKeyboardMarkup(row_width=4, one_time_keyboard=False, selective=True)
-    markup.add(*soctypes)
+    s=map(lambda x: '>'+str(x), soctypes)
+    markup.add(*s)
     if((arg=="all") and (message.from_user.username=='azcore')):
         markup = types.ReplyKeyboardMarkup(row_width=4, one_time_keyboard=False, selective=False)
         markup.add(*soctypes)
@@ -172,31 +177,32 @@ def default_test(message):
         bot.reply_to(message, "Кто ты, " + message.from_user.first_name + '?', reply_markup=markup)
 
 def is_soctype(arg):
-    if(arg.text in soctypes):
+    if(arg.text[1:] in soctypes):
         return True
     #else:
     #    print(arg)
 
 def is_pitype(arg):
-    if(arg.text in pitypes):
+    if(arg.text[1:] in pitypes):
         return True
 
 @bot.message_handler(func=is_soctype)
 def answer(message):
     if(not verify_chat(message)):
         return()
+    soctype=message.text[1:]
     keyboard_hider = types.ReplyKeyboardHide(selective=True)
     text='ok'
-    if(message.text.startswith('дон')):
+    if(soctype.startswith('дон')):
          text='Малаца, так держать!'
-    if(message.text.startswith('еся')):
+    if(soctype.startswith('еся')):
          text='Маленькая есечка!'
-    if(message.text.startswith('гек')):
+    if(soctype.startswith('гек')):
          text='Опасайся злобной блуд!'
-    if(message.text.startswith('гек') and message.from_user.username=='BlaBla7'):
+    if(soctype.startswith('гек') and message.from_user.username=='BlaBla7'):
          text='Опасайся злобной блуд! А. ты ж и есть злобная блуд...'
     if(message.from_user.first_name=='gr'):
-        if(message.text.startswith('еся')):
+        if(soctype.startswith('еся')):
             text=text+' Правду говорить легко и приятно!'
         else:
             text='Ну мы-то знаем...'
@@ -211,8 +217,8 @@ def answer(message):
         cur = con.cursor()
         user=message.from_user
         cur.execute("delete from soctypes where user=" +str(user.id))
-        print(str(user.id), user.first_name, user.last_name, user.username, message.text)
-        cur.execute("INSERT INTO soctypes VALUES ({}, '{}', '{}', '{}', '{}', 'None')".format(str(user.id), user.first_name, user.last_name, user.username, message.text))
+        print(str(user.id), user.first_name, user.last_name, user.username, soctype)
+        cur.execute("INSERT INTO soctypes VALUES ({}, '{}', '{}', '{}', '{}', 'None')".format(str(user.id), user.first_name, user.last_name, user.username, soctype))
 
 
     bot.reply_to(message, text, reply_markup=keyboard_hider)
@@ -223,14 +229,15 @@ def pianswer(message):
         return()
     keyboard_hider = types.ReplyKeyboardHide(selective=True)
     text='ok'
+    pitype=message.text[1:]
 
     con = sql.connect(db)
     with con:
         cur = con.cursor()
         user=message.from_user
         cur.execute("delete from pitypes where user=" +str(user.id))
-        print(str(user.id), user.first_name, user.last_name, user.username, message.text)
-        cur.execute("INSERT INTO pitypes VALUES ({}, '{}', '{}', '{}', '{}')".format(str(user.id), user.first_name, user.last_name, user.username, message.text))
+        print(str(user.id), user.first_name, user.last_name, user.username, pitype)
+        cur.execute("INSERT INTO pitypes VALUES ({}, '{}', '{}', '{}', '{}')".format(str(user.id), user.first_name, user.last_name, user.username, pitype))
 
     bot.reply_to(message, text, reply_markup=keyboard_hider)
 
