@@ -1,4 +1,5 @@
 import config
+import subprocess
 import telebot
 from telebot import *
 
@@ -9,15 +10,28 @@ db = config.db
 #cur.execute("CREATE TABLE soctypes(User INT uniq, firstname text, lastname text, nick text, Type TEXT)")
 soctypes=('дон','дюма', 'гюго', 'роб', 'гам', 'макс', 'жук', 'еся', 'нап','баль', 'джек', 'драй', 'штир', 'дост', 'гек', 'габ')
 pitypes=('ЭЛВФ', 'ЭЛФВ', 'ЭВЛФ', 'ЭВФЛ', 'ЭФВЛ', 'ЭФЛВ', 'ЛЭФВ', 'ЛВФЭ', 'ЛВЭФ', 'ЛЭВФ', 'ЛФЭВ', 'ЛФВЭ', 'ВЛЭФ', 'ВЛФЭ', 'ВФЛЭ', 'ВФЭЛ', 'ВЭЛФ', 'ВЭФЛ', 'ФЭЛВ', 'ФЭВЛ', 'ФЛЭВ', 'ФЛВЭ', 'ФВЭЛ', 'ФВЛЭ')
-allowed_chats=(-146621358, -1001053711520)
+titles=('Мя!',
+        'Соционический хаос',
+        'Трэш, Флуд, Две зануды',
+        'Попки и бухло!',
+        'Попки и бухло',
+        'СГМ',
+        'Сиськи, попки, бухло, сгм'
+        'Соционика Головного Мозга',
+        'Мечты Аушры',
+        'Мя! Социохаос',
+        'Зомби-чят ССС',
+        )
+mya=-1001053711520
+myaux=-146621358
+allowed_chats=(myaux, mya)
 
 def plist(l):
     res=''
     for i in l:
-        res=res  + '|<b>' + i + '</b>'
+        res=res + i + ", "
         
-    res=', '.join(res.split('|')[1:])
-    return res
+    return res.strip(', ')
 
 #@bot.message_handler(content_types=["text"])
 def verify_chat(message):
@@ -46,6 +60,61 @@ def get_soctype(soctype):
         print("res" + str(res))
     return res
 
+def sort_titles():
+    con = sql.connect(db)
+    with con:
+        cur = con.cursor()
+        cur.execute("select title,count(*) from titles group by title order by count(*) desc ;");
+        rows = cur.fetchall()
+        res=[]
+        for row in rows:
+            res.append(row[0])
+        print("res" + str(res))
+    return res
+
+def get_pop_title():
+    con = sql.connect(db)
+    with con:
+        cur = con.cursor()
+        cur.execute("select title,count(*) from titles group by title order by count(*) desc limit 1;");
+        rows = cur.fetchall()
+        res=rows[0][0]
+        print("pop_title:" + str(res))
+    return res
+
+def get_old_pop_title():
+    con = sql.connect(db)
+    with con:
+        cur = con.cursor()
+        cur.execute("select title from titles where user=1;");
+        rows = cur.fetchall()
+        res=[]
+        for row in rows:
+            res.append(row[0])
+        print("res" + str(res))
+    return res
+
+def update_title():
+    con = sql.connect(db)
+    with con:
+        cur = con.cursor()
+        cur.execute("update titles set firstname='Мя!' where user=1;");
+
+def get_titles(title):
+    con = sql.connect(db)
+    with con:
+        cur = con.cursor()
+        print("select firstname, lastname, nick  from titles where title='{}'".format(title));
+        cur.execute("select firstname, lastname, nick from titles where title='{}'".format(title));
+        
+        rows = cur.fetchall()
+
+        res=[]
+        for row in rows:
+            res.append(row[0])
+        print("res" + str(res))
+    return res
+
 def show_types(message, soctype):
     #try:
     #    soctype=message.text.split(' ')[1]
@@ -54,18 +123,41 @@ def show_types(message, soctype):
     #soctype=message.text[6:]
     res=''
     total=0
+
+    quadras=['α','ϐ','γ','δ']
     if soctype:
         members=get_soctype(soctype)
         print(str(members))
         res='(<b>'+str(len(members))+'</b>) '+ plist(members)
     else:
+       i=0
        for type in soctypes:
            members=get_soctype(type)
-           res=res + type + '(<b>' + str(len(members)) + '</b>): ' + plist(members) + '\n'
+           if(i%4==0):
+               q=int(i/4)
+               print(q)
+               qtot=0
+               res=res+"<b>• "+quadras[q]+"</b>\n"
+           res=res+"    <b>{} ({})</b>: {}\n".format(type.upper(), str(len(members)), plist(members))
+           
+           i=i+1
            total=total+len(members)
+           qtot=qtot+len(members)
+           if(i%4==0):
+               res=res.replace(quadras[q], quadras[q]+" ("+str((qtot))+")")
        res=res+'Всего: <b>{}</b>'.format(str(total)) 
     bot.reply_to(message, str(res),parse_mode='HTML')
 
+@bot.message_handler(commands=['titles'])
+def show_titles(message):
+    if(not (message.chat.id == myaux)):
+        return
+
+    res=""
+    for title in sort_titles():
+        members=get_titles(title)
+        res=res + title + '(<b>' + str(len(members)) + '</b>): ' + plist(members) + '\n'
+    bot.reply_to(message, str(res),parse_mode='HTML')
 
 def show_user(message, match):
     #match=message.text[7:]
@@ -85,12 +177,18 @@ def show_user(message, match):
         cur.execute(req);
         rows = cur.fetchall()
 
-        res=""
+        res={}
         for row in rows:
-            res=res+"{}: {}".format(row[0], row[1])
-        print("res" + str(res))
+            #res=res+"{}: {}".format(row[0], row[1])
 
-        req=("select type from pitypes"
+            try:
+                res[row[0]]
+            except:
+                res[row[0]]={}
+            res[row[0]]['soc']=row[1]
+            res[row[0]]['pi']=''
+
+        req=("select firstname, type from pitypes"
              " where lower(firstname) like lower ('%{}%')"
              " or lower(lastname) like lower ('%{}%')"
              " or lower(nick) like lower ('%{}%')").format(match,match,match)
@@ -99,13 +197,25 @@ def show_user(message, match):
         rows = cur.fetchall()
 
         for row in rows:
-            res=res+" {}".format(row[0])
-        print("res" + str(res))
+            try:
+                res[row[0]]
+            except:
+                res[row[0]]={}
+            res[row[0]]['pi']=row[1]
+            try:
+                res[row[0]]['soc']
+            except:
+                res[row[0]]['soc']=''
+            res[row[0]]['pi']=row[1]
 
-        if(not res):
-            res="no info"
+        res_str=''
+        if(not res_str):
+            res_str="no info"
+        else:
+            for user in res:
+                res_str=res_str+("<b>{}</b>: {} {}, ".format(user,res[user]['soc'],res[user]['pi']))
 
-        bot.reply_to(message, str(res))
+        bot.reply_to(message, res_str.strip(" ,"), parse_mode='HTML')
 
 
 @bot.message_handler(commands=['show','whois'])
@@ -170,11 +280,11 @@ def default_test(message):
         markup.add(*soctypes)
         bot.send_message(message.chat.id, "Вы кто такие все?", reply_markup=markup)
     elif(message.reply_to_message):
-        bot.reply_to(message.reply_to_message, "Кто ты, " + message.reply_to_message.from_user.first_name + '?', reply_markup=markup)
+        bot.reply_to(message.reply_to_message, "Кто ты по тиму, " + message.reply_to_message.from_user.first_name + '?', reply_markup=markup)
     elif(arg):
-        bot.send_message(message.chat.id, "Кто ты, " + arg  + '?', reply_markup=markup)
+        bot.send_message(message.chat.id, "Кто ты по тиму, " + arg  + '?', reply_markup=markup)
     else:
-        bot.reply_to(message, "Кто ты, " + message.from_user.first_name + '?', reply_markup=markup)
+        bot.reply_to(message, "Кто ты по тиму, " + message.from_user.first_name + '?', reply_markup=markup)
 
 def is_soctype(arg):
     if(arg.text and (arg.text[1:] in soctypes)):
@@ -186,17 +296,79 @@ def is_pitype(arg):
     if(arg.text and (arg.text[1:] in pitypes)):
         return True
 
+def is_title(arg):
+    if(arg.text and ((arg.text in titles) or (arg.text[0]=='-' and arg.text[1:] in titles))):
+        return True
+
+@bot.message_handler(commands=['title'])
+def title_poll(message):
+    if(not (message.chat.id == myaux)):
+        return
+
+    try:
+        arg=message.text.split(' ')[1]
+    except IndexError:
+        arg=''
+
+    markup = types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=False, selective=True)
+    markup.add(*(reversed(titles)))
+    poll="Проголосуй за название чата, {} (варианты пролистываются, голосовать можно за несколько вариантов по очереди, новые варианты принимаются)."
+
+    if((arg=="all") and (message.from_user.username=='azcore')):
+        markup = types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=False, selective=False)
+        markup.add(*titles)
+        bot.send_message(message.chat.id, poll, reply_markup=markup)
+    elif(message.reply_to_message):
+        bot.reply_to(message.reply_to_message, poll.format(message.reply_to_message.from_user.first_name), reply_markup=markup)
+    elif(arg):
+        bot.send_message(message.chat.id, poll.format(arg), reply_markup=markup)
+    else:
+        bot.reply_to(message, poll.format(message.from_user.first_name), reply_markup=markup)
+
+@bot.message_handler(func=is_title)
+def answer_title(message):
+    if(not verify_chat(message)):
+        return()
+    keyboard_hider = types.ReplyKeyboardHide(selective=True)
+    text='ok'
+    title=message.text
+
+    delete=0
+    if(title[0]=='-'):
+        delete=1
+        title=title[1:]
+
+    con = sql.connect(db)
+    with con:
+        cur = con.cursor()
+        user=message.from_user
+        print(str(user.id), user.first_name, user.last_name, user.username, title)
+        cur.execute("delete from titles where user={} and title='{}'".format(str(user.id), title))
+        if(not delete):
+            cur.execute("INSERT INTO titles VALUES ({}, '{}', '{}', '{}', '{}')".format(str(user.id), user.first_name, user.last_name, user.username, title))
+
+    bot.reply_to(message, text, reply_markup=keyboard_hider)
+    new_title=get_pop_title()
+    myachat=bot.get_chat(mya)
+    old_title=myachat.title
+    if(not (new_title==old_title)):
+        bot.send_message(myachat.id, "У нас новое название чата: {} -> {}\n Голосовать за названия можно тут: https://telegram.me/joinchat/EAIp5Ai9Q64iuZ7AK_UnkA".format(old_title, new_title))
+        bot.send_message(message.chat.id, "У нас новое название основного чата: {} -> {}".format(old_title, new_title))
+        subprocess.call(["telegram-cli", "-DCWe", "rename_channel {} {}".format("channel#1053711520", new_title)])
+        print("rename_channel {} {}".format(old_title, new_title))
+
+
 @bot.message_handler(func=is_soctype)
 def answer(message):
     if(not verify_chat(message)):
-        return()
+        return(n)
     soctype=message.text[1:]
     keyboard_hider = types.ReplyKeyboardHide(selective=True)
     text='ok'
     if(soctype.startswith('дон')):
          text='Малаца, так держать!'
     if(soctype.startswith('еся')):
-         text='Маленькая есечка!'
+         text='Маленькая есечка, уииии!'
     if(soctype.startswith('гек')):
          text='Опасайся злобной блуд!'
     if(soctype.startswith('гек') and message.from_user.username=='BlaBla7'):
@@ -257,6 +429,13 @@ def mystick(message):
     if(stickername in stickers):
         bot.send_sticker(message.chat.id, stickers[stickername])
 
+@bot.message_handler(content_types=['left_chat_member'])
+def userleft(message):
+    print("Left: {}".format(message.left_chat_member.__dict__))
+
+@bot.message_handler(content_types=['new_chat_member'])
+def userjoined(message):
+    print("Joined: {}".format(message.new_chat_member.__dict__))
 
 if __name__ == '__main__':
     bot.polling(none_stop=True)
