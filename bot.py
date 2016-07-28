@@ -209,12 +209,13 @@ def show_user(message, match):
             res[row[0]]['pi']=row[1]
 
         res_str=''
-        if(not res_str):
+        if(not res):
             res_str="no info"
         else:
             for user in res:
                 res_str=res_str+("<b>{}</b>: {} {}, ".format(user,res[user]['soc'],res[user]['pi']))
 
+        print(str(res))
         bot.reply_to(message, res_str.strip(" ,"), parse_mode='HTML')
 
 
